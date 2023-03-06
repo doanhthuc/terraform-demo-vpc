@@ -67,7 +67,7 @@ resource "aws_network_acl" "public_nacl" {
     action     = "allow"
     cidr_block = "0.0.0.0/0"
     from_port  = 0
-    to_port    = 8
+    to_port    = 0
   }
 
   egress {
@@ -80,7 +80,7 @@ resource "aws_network_acl" "public_nacl" {
   }
 
   egress {
-    protocol   = "all"
+    protocol   = "-1"
     rule_no    = 200
     action     = "allow"
     cidr_block = "0.0.0.0/0"
@@ -100,6 +100,10 @@ resource "aws_route_table" "public_route_table" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.IGW.id
   }
+
+  tags = {
+    Name = "demo-public-route-table"
+  }
 }
 
 resource "aws_route_table_association" "public_route_table_association" {
@@ -108,7 +112,9 @@ resource "aws_route_table_association" "public_route_table_association" {
 }
 
 resource "aws_security_group" "instance_sg" {
-  name_prefix = "demo_instance_sg"
+  name_prefix = "demo-instance-sg"
+  vpc_id      = aws_vpc.main.id
+
 
   ingress {
     description = "SSH"
@@ -133,14 +139,23 @@ resource "aws_security_group" "instance_sg" {
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    description = "All traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_instance" "demo_vpc_ec2_instance" {
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
-  key_name                    = "demo-vpc"
-  subnet_id                   = aws_subnet.public.id
-  vpc_security_group_ids      = [aws_security_group.instance_sg.id]
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  key_name      = "demo-vpc-company"
+  subnet_id     = aws_subnet.public.id
+  # vpc_security_group_ids      = [aws_security_group.instance_sg.id]
+  security_groups             = [aws_security_group.instance_sg.id]
   associate_public_ip_address = true
   tags = {
     Name = "demo-ec2-instance"

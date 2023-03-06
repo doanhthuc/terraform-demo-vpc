@@ -3,7 +3,7 @@ variable "region" {
   type    = string
 }
 variable "main_vpc_cidr" {
-  default = "10.1.0.0/16"
+  default = "10.1.0.0/22"
   type    = string
 }
 variable "public_subnets" {
